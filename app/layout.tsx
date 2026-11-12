@@ -7,9 +7,6 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Footer from './components/footer'
 import { baseUrl } from './sitemap'
-import { BackgroundCubesGrid } from './components/background-cubes-grid'
-import { ScalesContainer } from './components/scales'
-import { BackgroundBeams } from './components/background-beams';
 import { BackgroundRippleEffect } from "./components/background-ripple-effect";
 
 export const metadata: Metadata = {
