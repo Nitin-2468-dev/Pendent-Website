@@ -166,3 +166,24 @@ table {
     }
   }
 }
+
+@keyframes cell-ripple {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(0.92);
+  }
+
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+.animate-cell-ripple {
+  animation: cell-ripple var(--duration, 400ms) ease-out var(--delay, 0ms);
+}

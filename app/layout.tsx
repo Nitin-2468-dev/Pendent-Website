@@ -53,7 +53,7 @@ export default function RootLayout({
         GeistMono.variable
       )}
     >      
-    <body className="antialiased">
+    <body className="antialiased relative min-h-screen">
       {/* <ScalesContainer
         orientation="diagonal"
         size={12}
