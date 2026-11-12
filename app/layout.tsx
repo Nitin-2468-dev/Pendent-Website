@@ -7,6 +7,10 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Footer from './components/footer'
 import { baseUrl } from './sitemap'
+import { BackgroundCubesGrid } from './components/background-cubes-grid'
+import { ScalesContainer } from './components/scales'
+import { BackgroundBeams } from './components/background-beams';
+import { BackgroundRippleEffect } from "./components/background-ripple-effect";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -51,16 +55,30 @@ export default function RootLayout({
         GeistSans.variable,
         GeistMono.variable
       )}
-    >
-      <body className="antialiased max-w-xl mx-4 mt-8 lg:mx-auto">
-        <main className="flex-auto min-w-0 mt-6 flex flex-col px-2 md:px-0">
+    >      
+    <body className="antialiased">
+      {/* <ScalesContainer
+        orientation="diagonal"
+        size={12}
+        color="rgba(56, 207, 195, 0.12)"
+        className="pointer-events-none"
+        containerClassName="relative isolate min-h-screen w-full overflow-hidden bg-white dark:bg-black"
+      > */}
+      <BackgroundRippleEffect/>
+        <main className="relative z-10 mx-4 mt-14 flex w-auto max-w-4xl  min-w-0 flex-col px-2 lg:mx-auto">
+          
           <Navbar />
           {children}
           <Footer />
           <Analytics />
           <SpeedInsights />
         </main>
-      </body>
+      {/* </ScalesContainer> */}
+      {/* <BackgroundBeams/> */}
+    </body>
+
     </html>
   )
 }
+
+

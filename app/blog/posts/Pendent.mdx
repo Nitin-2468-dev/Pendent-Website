@@ -6,33 +6,16 @@ summary: "I wanted a little fluid simulation pendant. That turned into learning 
 
 
 # PENDENT
-*A little fluid simulation, but in a pendant. And powered by an ASIC.*
+*A fluid simulation pendant, with the simulation running on an ASIC.*
 
 
-So, the idea was simple.
+Hack Club had announced the [GF180MCU Run 3 MPW](https://wafer.space/price.html), supported by [DeepAI](https://deepai.org). Students could submit their own designs and have them placed on a shared chip, with each design getting its own tile.
 
+I saw that and started thinking about what I could make for it. I didn't have an idea straight away. Then I found [Mitxela's Fluid Simulation Pendant](https://mitxela.com/projects/fluid-pendant). I liked the idea of having a tiny fluid simulation that you could shake and watch moving around.
 
-I wanted to make a pendant with a little fluid simulation running inside it. Something that you can shake around, play with, and just look at.
+I wanted to make something along those lines, except with the simulation running on an ASIC I designed.
 
-
-I got the idea from [Mitxela's Fluid Simulation Pendant](https://mitxela.com/projects/fluid-pendant).
-
-
-But I wanted to do something a little different.
-
-
-Instead of just using a microcontroller to run the simulation, I wanted to make my own ASIC for it.
-
-
-How hard could it be?
-
-
-Well...
-
-
-This is how that went.
-
-
+So I started working on PENDENT. I thought it would be a fun project. It got complicated pretty quickly.
 ---
 
 
@@ -40,21 +23,21 @@ This is how that went.
 
 Before getting too far into hardware, I needed to work out what the simulation should actually do.
 
-The original inspiration was [Mitxela's Fluid Simulation Pendant](https://mitxela.com/projects/fluid-pendant). I also made an early shader on Shadertoy:
+The original inspiration was [Mitxela's Fluid Simulation Pendant](https://mitxela.com/projects/fluid-pendant).
 
 <Figure
   src="https://cdn.hackclub.com/01a1ca46-0e6e-740d-80e2-0c9bae429a9f/mitxela_pendent.png"
   alt="Mitxela fluid simulation pendant"
-  caption="The pendant that inspired the project."
+  caption="Mitxela's pendant — the starting point for PENDENT."
 />
+
+Before writing the Python simulation, I made a shader in [Shadertoy](https://www.shadertoy.com/view/sffyR4). The shader is embedded here on the project website, so you can play with it rather than just looking at a screenshot.
 
 <ShaderEmbed />
 
-And honestly, I could sit there and play with it all day. That was enough to make me want to build the pendant.
+This was an early way for me to explore the look of the pendant and see the effect moving on screen. I kept coming back to it, and it helped me decide that this was the project I wanted to make.
 
-But the Python simulation was not meant to be an exact copy of the shader. I started building a FLIP simulation. The shader had its own look and behaviour — the honey, the black voids, and the way particles seemed to move as a group. That is a different problem to solve. I did try to make the Python version look more like the shader later, but matching it was not the main goal.
-
-You can [open the original shader here](https://www.shadertoy.com/view/sffyR4).
+The Python version came later. I wasn't trying to translate the shader itself into Python; I started building a particle-based FLIP simulation for the actual project.
 
 ## Moving to Python
 
@@ -71,23 +54,27 @@ I used:
   caption="The simulation running in a Raylib window."
 />
 
-I already had some Python experience from other projects, including [HoloCore](https://github.com/Nitin-2468-dev/Holocore).
-
 The first version was a bit of a mess. Rendering, physics, updating, initialization — everything was tangled together. It worked, but it was going to be difficult to port, especially because Raylib obviously wasn't going to exist in the hardware design.
 
-So I split it up: rendering, maths, simulation/physics, and a small main file just to run everything. I also added tests. The grid was always meant to map to LEDs; I wasn't making a general simulation and deciding later to turn it into a display.
+So I split it up: rendering, maths, simulation/physics, and a small main file just to run everything. I also added tests. The grid was always meant to map to the LEDs, so I was working out how to set it up and get the particles into it from the beginning.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1ca46-0dd7-7c41-a7cd-9f86a3939e83/Grid.png"
+  alt="Simulation grid"
+  caption="The grid I was using to map the simulation to the LED display."
+/>
+
+I was still getting the grid set up and checking that the particles were being placed and shown where I expected.
 
 <ImageGrid columns={2}>
-  <Figure src="https://cdn.hackclub.com/01a1ca46-0dd7-7c41-a7cd-9f86a3939e83/Grid.png" alt="Simulation grid" caption="The grid used for the display." className="my-0" />
-  <Figure src="https://cdn.hackclub.com/01a1ca46-0bc4-7d79-b977-abbc78769cfd/Fully_filled.png" alt="Fully filled particle grid" caption="A fully filled test." className="my-0" />
-  <Figure src="https://cdn.hackclub.com/01a1ca46-0b05-715e-b233-4d4bf2f1a305/Working_half_filled.png" alt="Half-filled particle grid" caption="A half-filled test." className="my-0" />
-  <Figure src="https://cdn.hackclub.com/01a1ca46-0cdf-7f88-8638-95f643bf0e29/I_want_full_but_not_like_this.png" alt="Uneven particle distribution" caption="Not quite the result I wanted." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1ca46-0bc4-7d79-b977-abbc78769cfd/Fully_filled.png" alt="Fully filled particle grid" caption="The grid filled with particles." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1ca46-0b05-715e-b233-4d4bf2f1a305/Working_half_filled.png" alt="Half-filled particle grid" caption="The grid partially filled with particles." className="my-0" />
 </ImageGrid>
 
 <Figure
-  src="https://cdn.hackclub.com/01a1c781-d113-73f5-b23b-e01bbfe8acaf/Shader-hero.png"
-  alt="PENDENT fluid simulation"
-  caption="One of the early simulation experiments."
+  src="https://cdn.hackclub.com/01a1ca46-0cdf-7f88-8638-95f643bf0e29/I_want_full_but_not_like_this.png"
+  alt="Uneven particle distribution"
+  caption="Not quite the result I wanted."
 />
 
 ### Getting the particles to move
@@ -108,6 +95,12 @@ Then I started testing the boundary interactions.
   Your browser does not support the video tag.
 </video>
 
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-d113-73f5-b23b-e01bbfe8acaf/Shader-hero.png"
+  alt="PENDENT fluid simulation"
+  caption="An early view of the simulation."
+/>
+
 ### Trying to fix the flickering
 
 One problem I kept running into was flickering in the LED output. In some experiments, areas with fewer particles became black. The brightness was based on how many particles were in a tile: more particles meant more brightness, and zero particles meant no glow.
@@ -116,10 +109,11 @@ Because the boundary pushed particles into a roughly circular shape, the corners
 
 For example, one set of changes made the particles move more slowly and feel heavier. That is where the honey-like behaviour came from.
 
-<ImageGrid columns={2}>
-  <Figure src="https://cdn.hackclub.com/01a1ca46-0a56-7877-ad42-ed53c6599da7/ininal_spawn.png" alt="Initial particle spawn" caption="Initial particle spawn." className="my-0" />
-  <Figure src="https://cdn.hackclub.com/01a1ca46-09b6-7077-872c-e19d0d71a726/Votex.png" alt="Vortex experiment" caption="A vortex-like experiment." className="my-0" />
-</ImageGrid>
+<Figure
+  src="https://cdn.hackclub.com/01a1ca46-0a56-7877-ad42-ed53c6599da7/ininal_spawn.png"
+  alt="Initial particle spawn"
+  caption="One of the initial particle layouts."
+/>
 
 <video controls playsInline preload="metadata" className="w-full rounded-lg">
   <source src="https://cdn.hackclub.com/01a1cada-e6d5-7f2f-ac3f-27316fc7d986/honney_like.mp4" type="video/mp4" />
@@ -128,19 +122,25 @@ For example, one set of changes made the particles move more slowly and feel hea
 
 Other changes produced vortex-like formations. These pushed the particles near the centre faster and left a vacuum-like black region behind.
 
+<Figure
+  src="https://cdn.hackclub.com/01a1ca46-09b6-7077-872c-e19d0d71a726/Votex.png"
+  alt="Vortex experiment"
+  caption="A vortex-like formation in the simulation."
+/>
+
 <video controls playsInline preload="metadata" className="w-full rounded-lg">
   <source src="https://cdn.hackclub.com/01a1cada-e790-71a4-af84-ab2163d44b3e/vacuum_like.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
 
-And then there was the chaos test. The particles had so much energy that gravity couldn't pull them down properly. They started jumping around more like gas molecules.
+As I got more of the simulation working, the particles started moving with a lot more energy. Gravity couldn't pull them down properly, so they started jumping around almost like gas molecules.
 
 <video controls playsInline preload="metadata" className="w-full rounded-lg">
   <source src="https://cdn.hackclub.com/01a1cada-e276-72a3-b495-00bc63d7bad1/chaos.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
 
-These weren't planned simulation modes. They were results of me trying different parameters to fix the flickering and make the simulation feel right. Some changes fixed one thing and made something else look wrong.
+The different behaviours came from changing parameters while I was working on the simulation. Sometimes changing one thing helped, but made something else behave differently.
 
 There was also this boundary collision bug. The particles would fall down, come back from the top, fall down again, and eventually crash the program.
 
@@ -163,12 +163,18 @@ But I couldn't get it working.
   caption="The browser build was not having it."
 />
 
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-ce9c-71a7-bd9e-afd91487dc73/Python_web_not_compliting.png"
+  alt="Python browser build still incomplete"
+  caption="Another attempt that did not complete."
+/>
+
 So, for now, the website doesn't have an interactive version of the Python simulation. I can show recordings, but getting the actual thing running in a browser is still unfinished.
 
 
 ## Okay, let's make an ASIC
 
-I had already been interested in learning FPGA development before PENDENT. I wanted to make HoloCore more independent, because at the time it needed a bridge to work on its own.
+Before PENDENT, I had already been learning about FPGA development because of another project: [HoloCore](https://github.com/Nitin-2468-dev/Holocore). HoloCore is separate from PENDENT. I wanted to make it more independent, because at the time it needed a bridge to work on its own. The things I learned while working on HoloCore gave me a starting point when I began looking into hardware for PENDENT.
 
 I was looking around for ways to learn HDL. I watched some videos from [Nand Land](https://www.youtube.com/watch?v=fLua2urAuq0&list=PLnAoag7Ew-vr1M98Q5K2kLHxFQ5l0DU3B). They had some good videos, although I will admit I fell asleep during some of them. I wasn't planning to buy the Go board. I was mostly curious and wanted to see what HDL was about.
 
@@ -182,7 +188,38 @@ I started with the half adder. Two 1-bit inputs, A and B, and two outputs: Sum a
 
 After the half adder, I built a full adder, then a 4-bit adder. After that I moved on to fixed-point arithmetic (Q4.12) and a multiplier.
 
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-e6ba-741f-aef7-c1ce5e77e89c/Full_adder_digram.png"
+  alt="Full adder diagram"
+  caption="A full-adder diagram while learning the basics."
+/>
+
 I was learning from the [Amaranth documentation](https://amaranth-lang.org/docs/amaranth/latest/). I first tried the examples online, then installed the tools in a Linux VM and set everything up there. I wrote and tested code both online and locally.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-e3eb-7b2c-88fa-09d96426454a/Seting_up_VM.png"
+  alt="Setting up the Linux virtual machine"
+  caption="Setting up the Linux VM for the local toolchain."
+/>
+
+I also tried the examples online before moving everything into the VM.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-ea27-7adf-b0ac-02914eba0425/VM.png"
+  alt="Linux virtual machine"
+  caption="The Linux VM I used for the ASIC tools."
+/>
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-d57f-7631-9e9e-01c5f70f2b88/Loading_For_3hr.png"
+  alt="Long-running build"
+  caption="Some of the builds took hours."
+/>
+
+<ImageGrid columns={2}>
+  <Figure src="https://cdn.hackclub.com/01a1c781-e600-720b-9c75-8c950dcd69d8/Amaranth_online_test_1.png" alt="First online Amaranth test" caption="First online test." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-e51d-71d1-b2ab-52b3fa9b3a29/Amaranth_online_test_2.png" alt="Second online Amaranth test" caption="Another online test." className="my-0" />
+</ImageGrid>
 
 When I got stuck during this learning stage, I used ChatGPT for hints, not complete solutions. I wanted to understand what I was doing and get the tests passing. I wrote the tests myself too.
 
@@ -190,16 +227,22 @@ When I got stuck during this learning stage, I used ChatGPT for hints, not compl
   <Figure
     src="https://cdn.hackclub.com/01a1c781-e23e-71c3-9fab-cbc4cb739a4b/learing_Amaranth%C2%A0_Adder_Passed.png"
     alt="Amaranth adder test"
-    caption="The adder finally passed."
+    caption="The adder test running successfully."
     className="my-0"
   />
   <Figure
     src="https://cdn.hackclub.com/01a1c781-e324-74ff-b7ec-13a60b6d6e67/Learing_Amaranth_Fixed_muti_Passed.png"
     alt="Fixed point multiplier test"
-    caption="The fixed-point multiplier."
+    caption="Checking the fixed-point multiplier."
     className="my-0"
   />
 </ImageGrid>
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-e02d-78e2-bdef-11d6ac4d1c83/Mutipler_Passed.png"
+  alt="Multiplier test passed"
+  caption="Another multiplier test result."
+/>
 
 I also started looking at waveforms instead of only checking whether a test passed.
 
@@ -220,11 +263,11 @@ The important thing was that a module passing its own test was only one step. Th
 
 ## The simulation in hardware
 
-The Python simulation was mainly the algorithm and a way to experiment with the behaviour. The Amaranth design was a different job. In Python, I could use libraries and write the algorithm. In Amaranth, I had to build everything from the low-level pieces and work all the way up.
+The Python simulation was mainly the algorithm and a way to experiment with the behaviour. The Amaranth design was a different kind of challenge. In Python, I could use libraries and write the algorithm. In Amaranth, I had to build everything from the low-level pieces and work all the way up.
 
 I knew from the start that I would have to remake the simulation for hardware. I wasn't expecting to translate the Python code line by line. I wanted to make PENDENT with an ASIC, and getting the simulation working first meant I could work out what I wanted before dealing with all the hardware constraints.
 
-The architecture developed while I was coding. I experimented with different particle counts rather than choosing the final number from some big plan at the beginning. The current GF180 configuration is described as a 256-particle Q4.12 PIC/FLIP design with a five-stage simulation pipeline.
+The architecture developed while I was coding. I experimented with different particle counts rather than choosing the final number from some big plan at the beginning. The current GF180 configuration is a 256-particle Q4.12 PIC/FLIP design.
 
 ### Fixed-point arithmetic
 
@@ -242,11 +285,9 @@ Except getting the bit widths, signedness, shifts, and overflow behaviour correc
   caption="Project F's fixed-point guide helped me understand this."
 />
 
-### Not every test passed
+### Checking the pieces
 
-I want to be clear about the test results. Some individual modules and simulations passed. That doesn't mean every integration test, gate-level test, precheck, or physical-design step passed. They are different stages, and I shouldn't describe them all as one big "passed".
-
-Getting a GDS out of the flow was a milestone, but it doesn't prove that the design has been fabricated or tested on silicon.
+I tested the smaller modules as I built them. The adder and multiplier tests were useful checkpoints, but passing those tests didn't mean the whole design was finished. I still had to put the pieces together and get the complete design through the ASIC flow.
 
 
 ## Time was a problem
@@ -274,7 +315,7 @@ There were days when I was just staring at a terminal.
 <Figure
 
 
-  src="https://cdn.hackclub.com/01a1c781-d80a-7550-9297-b990300ec943/laptop_runing_for_7days_like_me.png"
+  src="https://cdn.hackclub.com/01a1d105-42d8-7332-835f-bfebcc591fd0/laptop_runing_for_14days_like_me.png"
 
 
   alt="Computer running for a long time"
@@ -288,19 +329,15 @@ There were days when I was just staring at a terminal.
 
 ### A note about AI
 
-I also want to be honest about something.
+I used AI during this project, and I don't think there's anything inherently wrong with that. The thing I kept thinking about was how much I was actually learning from it.
 
-The ASIC community has a restriction against AI-generated code. The reasoning is understandable: if AI writes your HDL and tests, you might end up with something you don't actually understand.
+Early on, when I was learning Amaranth, I mostly used ChatGPT for hints when I got stuck. I wrote the tests myself and tried to understand why something worked before moving on.
 
-During the early Amaranth learning exercises, I used ChatGPT for hints when I got stuck. I wrote those tests myself and wanted to understand the modules rather than just copy a solution.
+Later, when the project got bigger and I was running out of time, I used it much more. It helped generate parts of the reference implementation and parts of the Amaranth implementation. I also used it to explain concepts, explore approaches, and debug errors. So no, I didn't write every line of HDL myself.
 
-Later, when the project got much bigger and time was running out, I used AI more heavily. It helped generate parts of the reference implementation and parts of the Amaranth implementation. I also used it to explain concepts, explore approaches, and help debug errors. I didn't write every line of HDL myself.
+The downside is that getting an answer or a working-looking piece of code is not the same as understanding it. If I let AI do too much of the thinking, I can get through a task faster but learn much less from it. That's the part I had to be careful about. I still had to work through how the modules fitted together, make decisions, integrate things, and test the design.
 
-I still had to work through the integration, understand how the modules connected, make design decisions, and test what was being built. Some tests passed and some didn't. I initially didn't want to mention this because I didn't want the project to be seen as an AI project.
-
-But leaving it out wouldn't be honest. AI helped me move faster, but I still have a lot to learn, and I don't want to pretend I wrote every part myself.
-
-
+I don't think AI use should be confused with having learned everything. It helped me move the project forward, but there are parts I still need to understand better.
 ## The ASIC flow, and trying to get it to fit
 
 I ended up trying the Tiny Tapeout IHP flow (`ttihp27a`) first. Looking back, that was a mistake. I didn't have some carefully planned PDK strategy at this point. I was trying to get the design through the flow and learning a lot of things along the way.
@@ -317,20 +354,37 @@ I kept trying different configurations and tile sizes. The design wasn't fitting
 
 There were syntax errors, mapping problems, and builds that took ages.
 
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-dd99-7f2a-b94c-7fc1ae9f8f0c/Added_sntax_error.png"
+  alt="Syntax error"
+  caption="A syntax error from one of the early attempts."
+/>
+
+The syntax issues were only part of it. I also ran into technology-mapping failures.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-deec-72fb-917c-3c71932640fe/ADDED_DOT_VIEW_(Unable_to_techmap_or_pc_go_boom).png"
+  alt="Technology mapping failure"
+  caption="The mapping wasn't working either."
+/>
+
 <ImageGrid columns={2}>
-  <Figure
-    src="https://cdn.hackclub.com/01a1c781-dd99-7f2a-b94c-7fc1ae9f8f0c/Added_sntax_error.png"
-    alt="Syntax error"
-    caption="Another syntax error."
-    className="my-0"
-  />
-  <Figure
-    src="https://cdn.hackclub.com/01a1c781-deec-72fb-917c-3c71932640fe/ADDED_DOT_VIEW_(Unable_to_techmap_or_pc_go_boom).png"
-    alt="Technology mapping failure"
-    caption="The mapping wasn't working either."
-    className="my-0"
-  />
+  <Figure src="https://cdn.hackclub.com/01a1c781-dc7c-790c-a669-607c57a58403/ADDED_FAILLED.png" alt="Adder test failure" caption="A failed adder test." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-d723-76ac-a994-a580068be13b/Tessed_failed.png" alt="Failed test output" caption="Another failed test." className="my-0" />
 </ImageGrid>
+
+The design-size errors kept appearing too.
+
+<ImageGrid columns={2}>
+  <Figure src="https://cdn.hackclub.com/01a1c781-d4aa-7126-a46e-972988e410a3/Error_200-_to_big.png" alt="Design too large error" caption="A size-related error." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-d325-7e82-90aa-56ade6df1185/Error_900-_to_big.png" alt="Another design too large error" caption="Another size-related error." className="my-0" />
+</ImageGrid>
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-d20d-7792-a5b2-459133a3e0cd/Error_400-_to_big.png"
+  alt="Further design size error"
+  caption="Still too large."
+/>
 
 Some tests took around 45 minutes.
 
@@ -342,12 +396,12 @@ And still failed.
   caption="45 minutes. And it still failed."
 />
 
-At one point, compiling to Verilog produced thousands of errors.
+At one point, compiling to Verilog produced around 1,500 errors.
 
 <Figure
   src="https://cdn.hackclub.com/01a1c781-d65d-7754-9142-ab3bd223491c/Compling_to_verlog_15000_errrors.png"
   alt="Verilog compilation errors"
-  caption="15,000 errors. WHY?"
+  caption="Around 1,500 errors. WHY?"
 />
 
 Eventually, I got a GDS out of the IHP flow.
@@ -362,9 +416,9 @@ But that wasn't the end of the process.
 
 ## Moving to GF180MCU
 
-There wasn't an original plan to use IHP and then migrate to GF180MCU. I was figuring things out as I went. The opportunity from Hack Club changed the target: the event had a shared GF180MCU Run 3 MPW, so the design needed to use GF180MCU.
+I had wanted to build PENDENT on GF180MCU from the beginning, especially because that was the process used for the Hack Club shared-chip event that got me started on this project. But while setting up the ASIC flow, I somehow chose the IHP flow (`ttihp27a`) by mistake.
 
-The new target uses the Tiny Tapeout `ttgf26c` flow and the `gf180mcuD` process. I had to rebuild the project for that flow too.
+The GF180 version uses the Tiny Tapeout `ttgf26c` flow and the `gf180mcuD` process, so I had to get the project working with that flow too.
 
 And eventually, I got the GF180 GDS generated.
 
@@ -374,35 +428,37 @@ And eventually, I got the GF180 GDS generated.
   caption="The GF180MCU GDS render. This is the version I want to move forward with."
 />
 
+<Figure
+  src="https://cdn.hackclub.com/01a1c782-e456-773c-b7e9-084b38caf250/Website.png"
+  alt="PENDENT project website"
+  caption="The project website."
+/>
+
 I opened it immediately. I was genuinely as happy as a kid opening birthday presents. It was something I had been working on, and now I could actually look at the layout of the chip. That feeling was hard to beat.
-
-One thing I want to make clear: generating a GDS doesn't mean the chip has already been fabricated or tested on silicon. It means I got the design through that stage of the flow.
-
-### What does getting onto the chip mean?
-
-Hack Club has a 1×1 slot on the [wafer.space GF180MCU Run 3 MPW](https://wafer.space/price.html), with support from [DeepAI](https://deepai.org/). The idea is to put over 100 student designs into separate tiles on one shared chip, multiplex them onto the IO pins, and manufacture the combined design.
-
-So my design isn't going to be a whole chip by itself. It is one chunk of the shared chip, alongside everyone else's designs. The event plans to send participants a chip and breakout board containing the designs.
-
-The event also asks us to make a Tiny Tapeout GF180 design, write up how it works, and test it on an FPGA with a logic analyzer before submitting it for the shared chip. That FPGA testing is my next step.
 
 
 ## The actual pendant hardware
 
-The ASIC is only one part of the pendant. I still need the LEDs, sensors, memory, battery, and all the supporting electronics.
+The ASIC runs the fluid simulation. I also need an RP2040 on the PCB, but at this stage its job is only to select my chip's tile on the shared Tiny Tapeout chip. I might give it more responsibilities later, but that's all it does in the current design.
+
+That means the pendant needs the LEDs, sensors, memory, battery, and all the supporting electronics too.
 
 The current hardware plan includes:
 
 - 216 monochrome LEDs in a circular arrangement, with no centre LED.
 - An LED driver.
 - A LIS2DW12 accelerometer for movement detection.
-- ESP-PSRAM64H external PSRAM, shared between the RP2040 and ASIC.
+- ESP-PSRAM64H external PSRAM for the ASIC.
 - W25Q16JV QSPI flash, which I believe is for the RP2040 firmware, based on the devboard guide I followed.
 - A rechargeable battery and power circuitry.
 
 The idea is that when the pendant is lying face-down and not being used, it should go to sleep. Then, when someone shakes it, it wakes up.
 
-<Figure src="https://cdn.hackclub.com/01a1c782-f07e-79cc-9b98-048f24d9f743/POWER!!!.png" alt="Power circuitry" caption="Power circuitry planning." />
+<ImageGrid columns={2}>
+  <Figure src="https://cdn.hackclub.com/01a1c782-f07e-79cc-9b98-048f24d9f743/POWER!!!.png" alt="Power circuitry" caption="Power circuitry planning." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c782-ec1b-7bfb-95b6-4bb307c53555/power_IDK.png" alt="Power circuit experiment" caption="Another power-circuit experiment." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c782-ef9b-77bc-88a6-c68979b8feab/decoplyting_cap.png" alt="Decoupling capacitor reference" caption="Decoupling capacitor placement/reference." className="my-0" />
+</ImageGrid>
 
 ### The LED display
 
@@ -423,11 +479,15 @@ I wanted 216 LEDs arranged in a circle, without a centre LED. I worked out the a
   />
 </ImageGrid>
 
-<Figure
-  src="https://cdn.hackclub.com/01a1c782-e6bd-75c8-8e7d-5183afd988d1/PCB-LEDs.png"
-  alt="LED PCB layout"
-  caption="The LED arrangement."
-/>
+<ImageGrid columns={2}>
+  <Figure
+    src="https://cdn.hackclub.com/01a1c782-e6bd-75c8-8e7d-5183afd988d1/PCB-LEDs.png"
+    alt="LED PCB layout"
+    caption="The LED arrangement."
+    className="my-0"
+  />
+  <Figure src="https://cdn.hackclub.com/01a1c782-e536-74c8-85c6-010b4fcd229e/PCB-Leds-doen.png" alt="Completed LED PCB layout" caption="The LED PCB layout after the work." className="my-0" />
+</ImageGrid>
 
 ### The accelerometer
 
@@ -445,13 +505,13 @@ The LIS2DW12 is used for detecting movement. The plan is to use it for shake-to-
   caption="The accelerometer selected for motion detection."
 />
 
-### Memory: shared working memory and RP2040 flash
+### Memory
 
 There are two different memory chips in the design, and they have different jobs.
 
-#### ESP-PSRAM64H — shared working memory
+#### ESP-PSRAM64H — external PSRAM
 
-The ESP-PSRAM64H provides 64 Mbit (8 MB) of external PSRAM. It is intended to be accessible to both the RP2040 and the ASIC. The ASIC uses it as working memory for the simulation; the RP2040 also has access to it.
+The ESP-PSRAM64H provides 64 Mbit (8 MB) of external PSRAM. It is intended to provide working memory for the ASIC's simulation.
 
 <Figure
   src="https://cdn.hackclub.com/01a1c7b2-2596-738b-a631-a399bee432cb/Memory.png"
@@ -459,7 +519,7 @@ The ESP-PSRAM64H provides 64 Mbit (8 MB) of external PSRAM. It is intended to be
   caption="The external PSRAM connection."
 />
 
-#### W25Q16JV — RP2040 flash
+#### W25Q16JV — QSPI flash
 
 The other chip is the W25Q16JV. It provides 16 Mbit (2 MB) of QSPI flash. I believe this is for storing the RP2040 firmware, based on the [devboard guide](https://kaipereira.com/journal/build-a-devboard) I followed. I haven't independently confirmed every detail of that part yet.
 
@@ -469,18 +529,11 @@ The other chip is the W25Q16JV. It provides 16 Mbit (2 MB) of QSPI flash. I beli
   caption="The QSPI flash circuit."
 />
 
-So the important distinction is:
-
-- **ASIC:** performs the fluid simulation.
-- **RP2040:** handles the chip-side communication and has access to the shared PSRAM.
-- **PSRAM:** working memory shared by the RP2040 and ASIC.
-- **QSPI flash:** intended for the RP2040 firmware.
+All of these components sit on the same PCB. That's where the carrier-board design comes in.
 
 ### The carrier board
 
-Getting a GDS is one thing. Actually making a pendant out of it is another.
-
-The Tiny Tapeout chip needs a carrier board to expose its pins and connect it to the rest of the hardware. This became another project by itself. I had to understand the pinout, control signals, power connections, footprints, and how everything should connect.
+The carrier board connects the Tiny Tapeout chip to the RP2040, memory, LEDs, sensor, power circuitry, and the other components. I had to work out the chip pinout, control signals, power connections, footprints, and how everything should connect.
 
 <Figure
   src="https://cdn.hackclub.com/01a1c782-f39d-7a6c-b832-3e4f8c9f07d6/My_frindes_kicad.png"
@@ -488,15 +541,18 @@ The Tiny Tapeout chip needs a carrier board to expose its pins and connect it to
   caption="My friend's KiCad design, which helped me understand how the board was put together."
 />
 
-<Figure
-  src="https://cdn.hackclub.com/01a1c782-f282-714e-a873-b378394c41da/What_this_(Controll_pins_Asic).png"
-  alt="ASIC control pin documentation"
-  caption="Trying to understand the ASIC pins."
-/>
+<ImageGrid columns={2}>
+  <Figure
+    src="https://cdn.hackclub.com/01a1c782-f282-714e-a873-b378394c41da/What_this_(Controll_pins_Asic).png"
+    alt="ASIC control pin documentation"
+    caption="Trying to understand the ASIC pins."
+    className="my-0"
+  />
+  <Figure src="https://cdn.hackclub.com/01a1c782-eae5-71b5-9d1a-59aca89e79ba/Contoll_pins_Asic.png" alt="ASIC control pins" caption="The control pins." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c782-ed70-7b29-ac59-11396b2dab24/ASIC_scamitic.png" alt="ASIC schematic" caption="The ASIC schematic." className="my-0" />
+</ImageGrid>
 
-I also needed an RP2040 on the board. The RP2040 handles the chip-side communication and can access the PSRAM, which is also connected to the ASIC. The ASIC itself does the fluid simulation. It is the part doing the number crunching in a loop.
-
-I modified an RP2040 development-board design based on [Kai Pereira's devboard guide](https://kaipereira.com/journal/build-a-devboard). Kai is also the organiser behind the event. That guide gave me a starting point for the RP2040 side of the design.
+The RP2040 is also on this PCB. Its only job in the current design is selecting my tile on the shared chip. I based its circuit on [Kai Pereira's devboard guide](https://kaipereira.com/journal/build-a-devboard). Kai is also the organiser behind the event, and the guide gave me a useful starting point.
 
 <ImageGrid columns={2}>
   <Figure src="https://cdn.hackclub.com/01a1c782-ee9b-7699-a297-b649495af3f5/rp2040_datasheet.png" alt="RP2040 datasheet" caption="The RP2040 datasheet." className="my-0" />
@@ -507,11 +563,34 @@ I modified an RP2040 development-board design based on [Kai Pereira's devboard g
 
 The documentation was difficult to work through when I was starting with almost no knowledge of this stuff. There weren't videos for every repository or design detail, and I had to work through the docs. A friend who was also making his own chip helped me a lot. He shared his carrier-board design files with me, which gave me something real to study and compare against.
 
-I designed two boards: the RP2040 + memory board and the PENDENT carrier board. I also recorded timelapses of the work:
+I worked on the PCB and also recorded a timelapse of the work:
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c782-f177-79f3-90be-09a63a26c32e/Starting_PCB_porting_easyeda.png"
+  alt="Starting PCB design"
+  caption="Starting the PCB design and bringing the parts into KiCad."
+/>
+
+I kept comparing my work with the reference board and checking the datasheets.
 
 <ImageGrid columns={2}>
-  <Figure src="https://cdn.hackclub.com/01a1c782-f177-79f3-90be-09a63a26c32e/Starting_PCB_porting_easyeda.png" alt="Starting PCB design" caption="Starting the PCB design." className="my-0" />
-  <Figure src="https://cdn.hackclub.com/01a1c781-c989-751e-beaf-695c35ee915a/GND_Mess.png" alt="PCB ground layout" caption="The ground layout getting messy." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-ca7c-76e1-ad93-d489fdf7016a/Frinds_Scamimtic.png" alt="Friend's schematic" caption="Looking through my friend's schematic." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-c581-7100-8067-f5b9c7fba0d7/Datasheet.png" alt="Component datasheet" caption="Back to the datasheet." className="my-0" />
+</ImageGrid>
+
+The layout itself had its own problems — footprints, pin assignments, and trying to keep the connections organised.
+
+<ImageGrid columns={2}>
+  <Figure src="https://cdn.hackclub.com/01a1c781-ccab-7aa8-bcb1-ea94b13ccd96/were_is_the_footprint.png" alt="Searching for a component footprint" caption="Looking for the right footprint." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-cd8c-70b6-8a0d-f3c036d7d555/70pin_harder_(before_doc_worng_as_hell).png" alt="70-pin component documentation" caption="The 70-pin part was harder to work with." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-cba9-7c34-ac31-bcadc08e81eb/were_is_bro_sending_me.png" alt="PCB design troubleshooting" caption="Trying to work out a connection." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-c778-72f5-9731-e73d41fbd8fd/Analog_for_what.png" alt="Analog pin question" caption="Trying to understand the analogue pins." className="my-0" />
+</ImageGrid>
+
+<ImageGrid columns={2}>
+  <Figure src="https://cdn.hackclub.com/01a1c781-c989-751e-beaf-695c35ee915a/GND_Mess.png" alt="Ground connections in the schematic" caption="Sorting out the GND connections in the schematic." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-c68a-7628-816a-0245202f1a38/All_hiding_GND.png" alt="Ground connections in the schematic" caption="Finding the ground pins in the schematic." className="my-0" />
+  <Figure src="https://cdn.hackclub.com/01a1c781-c882-7216-a71b-d3167acc63d6/Fliped_board.png" alt="Flipped PCB board view" caption="The board viewed from the other side." className="my-0" />
 </ImageGrid>
 
 - [RP2040 and memory PCB timelapse](https://lapse.hackclub.com/timelapse/e9HuG8zWzTkU)
@@ -521,81 +600,29 @@ But I haven't finished the PCB work. The PENDENT carrier schematic is done apart
 
 I have selected the HT16D33B in the ASIC flow for the LED driver. The main reason for switching from the IS31FL3741A is its 16×16 arrangement, which suits the display mapping. I still need to update the carrier-board schematic to match that change.
 
-<ImageGrid columns={2}>
-  <Figure src="https://cdn.hackclub.com/01a1c781-eb4b-7cad-b25d-df07da61ea72/LED_driver_(old).png" alt="Earlier LED driver choice" caption="The older LED-driver choice." className="my-0" />
-  <Figure src="https://cdn.hackclub.com/01a1c782-e877-7b83-ab67-83188978df15/leds-Counting.png" alt="LED counting" caption="Counting the LEDs for the display." className="my-0" />
-</ImageGrid>
+<Figure
+  src="https://cdn.hackclub.com/01a1c781-eb4b-7cad-b25d-df07da61ea72/LED_driver_(old).png"
+  alt="Earlier LED driver choice"
+  caption="The earlier LED-driver circuit, before I switched to the HT16D33B."
+/>
+
+<Figure
+  src="https://cdn.hackclub.com/01a1c782-e877-7b83-ab67-83188978df15/leds-Counting.png"
+  alt="LED counting"
+  caption="Counting the LEDs for the display."
+/>
 
 And the reason the PCB is still sitting there is pretty simple: I ran out of time. I have schoolwork piling up, exams coming, and I need to get the FPGA testing moving first. The FPGA test doesn't need the carrier PCB.
-
-
-## The Linux VM
-A lot of the ASIC work also involved setting up a Linux environment.
-
-
-The synthesis and physical-design toolchain needed a proper environment, so I spent time setting up and working inside a Linux VM.
-
-
-<Figure
-
-
-  src="https://cdn.hackclub.com/01a1c781-ea27-7adf-b0ac-02914eba0425/VM.png"
-
-
-  alt="Linux virtual machine"
-
-
-  caption="The Linux VM I used for the ASIC tools."
-
-
-/>
-
-
-There were plenty of long builds, crashes, and waiting.
-
-
-<Figure
-
-
-  src="https://cdn.hackclub.com/01a1c781-d57f-7631-9e9e-01c5f70f2b88/Loading_For_3hr.png"
-
-
-  alt="Long-running build"
-
-
-  caption="Waiting for another build."
-
-
-/>
 
 
 ---
 
 
-## Things I learned
-
-A few things I learned from all this:
-
-- Getting a simulation working in Python is very different from implementing it in hardware.
-- Amaranth made HDL easier to approach, but it didn't remove the need to understand hardware.
-- Fixed-point arithmetic is more annoying than I expected.
-- Passing one module's test doesn't mean the whole system works.
-- A design can work in simulation and still fail during synthesis or physical design.
-- Documentation is important. I should have written down more things while working instead of trying to remember everything later.
-- PCB design is a whole separate learning curve.
-- AI can speed things up, but it doesn't replace understanding what you're building.
-
-And probably the biggest thing: there is a LOT of work between having an idea and getting an actual chip.
-
-
 ## Thanks!
-A huge thank you to **@opilitethesmartdev** for all the help and guidance throughout this project.
 
+A big thank you to **@opilitethesmartdev** for the major help with the PCB and carrier-board design. I also want to thank everyone in Hack Club and the ASIC community who helped me work through my many questions and doubts. I know I asked a lot of them, and your help made a real difference.
 
-There were quite a few times when I was stuck, and the help made a real difference.
-
-
-Also, thanks to everyone who makes the Tiny Tapeout ecosystem and its resources available.
+And thanks to everyone who shared resources, designs, explanations, and advice along the way.
 
 
 ## Project links
@@ -632,3 +659,8 @@ The thing I want at the end is pretty simple: to see something I made on a silic
 A little battery-powered pendant, 216 LEDs in a circle, a fluid simulation running on its own ASIC, and shake-to-wake.
 
 I still have a lot to do before that happens.
+
+
+
+
+
