@@ -160,35 +160,37 @@ function Callout({
 
 // Responsive Shadertoy embed
 function ShaderEmbed({
-  src = 'https://www.shadertoy.com/embed/sffyR4?gui=true&t=10&paused=true&muted=false',
+  src = 'https://www.shadertoy.com/view/NXyGWd?gui=true&t=10&paused=true&muted=false',
   title = 'PENDENT fluid simulation prototype',
 }) {
   return (
-    <div className="my-12">
-      <div className="aspect-video w-full overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-900">
+    <div className="my-12 w-full">
+      <div className="relative w-full overflow-hidden rounded-xl bg-black aspect-video">
         <iframe
+          width="640"
+          height="360"
+          frameBorder="0"
           src={src}
           title={title}
-          className="h-full w-full border-0"
+          className="absolute inset-0 h-full w-full border-0"
           allowFullScreen
-          loading="lazy"
         />
       </div>
 
       <p className="mt-3 text-center text-sm text-neutral-500">
-        If the interactive preview does not load,{' '}
         <a
-          href="https://www.shadertoy.com/view/sffyR4"
+          href="https://www.shadertoy.com/view/NXyGWd"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-4"
         >
-          open the simulation on Shadertoy
-        </a>.
+          Open on Shadertoy
+        </a>
       </p>
     </div>
   )
 }
+
 
 // Syntax highlighting
 function Code({ children, ...props }) {
