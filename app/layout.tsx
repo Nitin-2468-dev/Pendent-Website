@@ -7,7 +7,6 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Footer from './components/footer'
 import { baseUrl } from './sitemap'
-import { BackgroundRippleEffect } from "./components/background-ripple-effect";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -61,7 +60,7 @@ export default function RootLayout({
         className="pointer-events-none"
         containerClassName="relative isolate min-h-screen w-full overflow-hidden bg-white dark:bg-black"
       > */}
-      <BackgroundRippleEffect/>
+      <div aria-hidden="true" className="background-grid" />
         <main className="relative z-10 mx-4 mt-14 flex w-auto max-w-4xl  min-w-0 flex-col px-2 lg:mx-auto">
           
           <Navbar />
