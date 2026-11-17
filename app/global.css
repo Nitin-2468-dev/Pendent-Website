@@ -187,3 +187,35 @@ table {
 .animate-cell-ripple {
   animation: cell-ripple var(--duration, 400ms) ease-out var(--delay, 0ms);
 }
+
+/*
+ * CSS-only replacement for the per-cell animated background.
+ * The old component created a React node and event handler for every grid cell
+ * across the full article height. This keeps the same subtle grid motif without
+ * a client component, ResizeObserver, or hundreds/thousands of DOM elements.
+ */
+.background-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background-image:
+    linear-gradient(to right, rgb(115 115 115 / 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(115 115 115 / 0.22) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse at top, #000 15%, transparent 82%);
+  mask-image: radial-gradient(ellipse at top, #000 15%, transparent 82%);
+}
+
+
+.background-ripple-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse at top, #000 15%, transparent 82%);
+  mask-image: radial-gradient(ellipse at top, #000 15%, transparent 82%);
+}

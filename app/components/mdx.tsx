@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
+import { DeferredIframe } from './deferred-iframe'
 
 // Existing table component
 function Table({ data }) {
@@ -158,40 +159,6 @@ function Callout({
   )
 }
 
-// Responsive Shadertoy embed
-function ShaderEmbed({
-  src = 'https://www.shadertoy.com/view/NXyGWd?gui=true&t=10&paused=true&muted=false',
-  title = 'PENDENT fluid simulation prototype',
-}) {
-  return (
-    <div className="my-12 w-full">
-      <div className="relative w-full overflow-hidden rounded-xl bg-black aspect-video">
-        <iframe
-          width="640"
-          height="360"
-          frameBorder="0"
-          src={src}
-          title={title}
-          className="absolute inset-0 h-full w-full border-0"
-          allowFullScreen
-        />
-      </div>
-
-      <p className="mt-3 text-center text-sm text-neutral-500">
-        <a
-          href="https://www.shadertoy.com/view/NXyGWd"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-4"
-        >
-          Open on Shadertoy
-        </a>
-      </p>
-    </div>
-  )
-}
-
-
 // Syntax highlighting
 function Code({ children, ...props }) {
   const codeHTML = highlight(String(children))
@@ -253,7 +220,7 @@ const components = {
   Figure,
   ImageGrid,
   Callout,
-  ShaderEmbed,
+  iframe: DeferredIframe,
 }
 
 export function CustomMDX(props) {
