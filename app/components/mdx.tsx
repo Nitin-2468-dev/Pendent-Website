@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
+import { DeferredIframe } from './deferred-iframe'
 
 // Existing table component
 function Table({ data }) {
@@ -158,59 +159,6 @@ function Callout({
   )
 }
 
-// Load the third-party Shadertoy application only after the reader asks for it.
-// This keeps its scripts, WebGL context, font and image requests off the initial page load.
-function ShaderEmbed({
-  src = 'https://www.shadertoy.com/embed/NXyGWd?gui=true&t=10&paused=true&muted=false',
-  title = 'PENDENT fluid simulation prototype',
-}) {
-  const [enabled, setEnabled] = React.useState(false)
-
-  return (
-    <div className="my-12 w-full">
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-950">
-        {enabled ? (
-          <iframe
-            width="640"
-            height="360"
-            title={title}
-            className="absolute inset-0 h-full w-full border-0"
-            src={src}
-            loading="lazy"
-            allow="fullscreen; autoplay; picture-in-picture"
-            allowFullScreen
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setEnabled(true)}
-            className="absolute inset-0 flex w-full flex-col items-center justify-center gap-3 px-6 text-center text-white transition-colors hover:bg-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
-            aria-label={`Load interactive demo: ${title}`}
-          >
-            <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/50 bg-white/10 text-2xl" aria-hidden="true">
-              ▶
-            </span>
-            <span className="font-medium">Load interactive simulation</span>
-            <span className="text-sm text-neutral-400">Loads Shadertoy only when you press play</span>
-          </button>
-        )}
-      </div>
-
-      <p className="mt-3 text-center text-sm text-neutral-500">
-        <a
-          href="https://www.shadertoy.com/view/NXyGWd"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-4"
-        >
-          Open on Shadertoy
-        </a>
-      </p>
-    </div>
-  )
-}
-
-
 // Syntax highlighting
 function Code({ children, ...props }) {
   const codeHTML = highlight(String(children))
@@ -272,7 +220,7 @@ const components = {
   Figure,
   ImageGrid,
   Callout,
-  ShaderEmbed,
+  iframe: DeferredIframe,
 }
 
 export function CustomMDX(props) {
