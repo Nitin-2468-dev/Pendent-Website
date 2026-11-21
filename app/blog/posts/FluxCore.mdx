@@ -1,0 +1,360 @@
+---
+title: "FluxCore — Building a 2×2 CGRA"
+publishedAt: "2026-11-21"
+summary: "My second ASIC. How the experience from the first one helped me build a small reconfigurable compute array during exam season."
+---
+
+# FluxCore
+
+_A 2×2 coarse-grained reconfigurable array._
+
+I have made my **second ASIC**, and my exams are still going on.
+
+But I thought, what is better than an ASIC?
+
+**Two of them.**
+
+This time I wasn't starting from zero. My first ASIC had already taught me how to work with Amaranth and get a design through the ASIC flow.
+
+I still had plenty to learn, but I didn't have to figure out the whole process again. That is probably the main reason I was able to move so quickly with this one.
+
+I wanted to build something FAST. Something I could put together, test, and get through the flow without spending months on it. I didn't have much time left, so I started thinking about a **Matrix Accelerator**.
+
+---
+
+## Why matrices?
+
+I have already spent time building things around 3D rendering and image projection. Matrices are everywhere in that kind of work: transformations, rotations, projections, and all the calculations needed to move between different perspectives.
+
+And then there is AI. A lot of the computation inside transformer models is also built around matrix operations.
+
+So matrix maths felt like a useful thing to build around.
+
+At first, I was thinking about a dedicated matrix-multiplication accelerator. But while looking into different architectures, I came across something called a **CGRA**.
+
+## Finding the CGRA
+
+A CGRA stands for _Coarse-Grained Reconfigurable Array_.
+
+The way I understood it, it is kind of in between an FPGA and a GPU. An FPGA gives you fine-grained configurable logic, while a GPU has lots of compute units designed to work in parallel.
+
+A CGRA uses an array of larger processing elements. Each element can be configured to perform an operation and choose where its inputs come from.
+
+Instead of building one fixed matrix multiplier, I could build a small array of maths units and configure how they work together.
+
+That sounded much more interesting.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fb3e-78f9-af7d-a1862255fefc/01-architecture-concept.png"
+  alt="The 2×2 PE layout."
+  caption="FluxCore architecture"
+/>
+
+I looked around for explanations and tutorials, but there weren't many good videos that explained how a CGRA actually works in the way I needed.
+
+So I ended up learning it through reading, experimenting, simulation, and a lot of help from ChatGPT.
+
+When I finally understood the basic architecture, it was surprisingly simple.
+
+## The basic idea
+
+It's an ALU with some muxes picking where the inputs come from.
+
+The ALU performs the operation, and its result gets stored in a register. Another PE can then use that result as one of its inputs.
+
+So I can configure a few operations, connect the PEs, give the array its initial operands, and let the data move through it over clock cycles.
+
+There was one thing I had to get right, though: the results are registered. A PE doesn't immediately see what another PE has calculated in the same cycle.
+
+I ran into that pretty quickly.
+
+## Building FluxCore
+
+I called the project **FluxCore**.
+
+The first version is a 2×2 array of four 32-bit processing elements:
+
+```text id="u7x2pm"
++-------+-------+
+|  PE0  |  PE1  |
++-------+-------+
+|  PE2  |  PE3  |
++-------+-------+
+```
+
+Each PE has an 8-bit configuration word:
+
+| Bits    | Meaning            |
+| ------- | ------------------ |
+| `[3:0]` | Operation          |
+| `[5:4]` | Source A selection |
+| `[7:6]` | Source B selection |
+
+The operations implemented in this version include:
+
+- `ADD`, `SUB`, `MUL`, `MAC`
+- `AND`, `OR`, `XOR`, `NOT`
+- `SHL`, `SHR`
+- `PASS_A`, `PASS_B`
+- `ACC_CLEAR`
+
+Each processing element has a 32-bit result register and a 32-bit accumulator. The MAC operation uses that accumulator to keep a running total.
+
+I used **Amaranth** to describe the hardware and generate Verilog. Since I already knew the toolchain, I could spend more time on the actual CGRA.
+
+## Getting the PEs working
+
+Before trying to make all four PEs work together, I started with the basic arithmetic.
+
+```text id="hf85xj"
+10 + 7 = 17
+20 - 6 = 14
+9 × 8 = 72
+```
+
+Then I checked the configuration path and watched the signals in GTKWave.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fc0b-75b3-bb59-144c7e492506/02-early-configuration-waveform.png"
+  alt="Configuration signals in GTKWave."
+  caption="Configuration waveform"
+/>
+
+This helped me see what value the ALU was actually receiving.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fca8-7353-84b7-d479f53810a5/03-early-arithmetic-waveform.png"
+  alt="Early arithmetic test."
+  caption="Arithmetic waveform"
+/>
+
+After that, I wanted to get two PEs working together.
+
+I wanted PE0 to calculate:
+
+```text id="nd8h3c"
+PE0: 10 + 7 = 17
+PE1: 17 + 5 = 22
+```
+
+Simple enough, right?
+
+Well, not initially.
+
+At first, PE1 kept returning `5` instead of `22`.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fd37-739f-a0f5-19eac17e285a/04-first-pipeline-mismatch.png"
+  alt="PE1 showing 5 instead of 22."
+  caption="First pipeline mismatch"
+/>
+
+I could see PE0 calculating `17`, but PE1 was still using the old value.
+
+I spent some time looking at the waveforms and wondering what was wrong with the connection. Then I realised what was happening.
+
+The processing elements were registered. PE1 wasn't going to see a value that PE0 had only just calculated in the same cycle. The result had to be registered first.
+
+So I added another execution step, allowing PE1 to consume PE0's updated result.
+
+And finally:
+
+```text id="h5t1cu"
+PE0 = 17
+PE1 = 22
+```
+
+It worked.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fdc5-7153-9ccc-84c7fdca5671/05-pipeline-test-passing.png"
+  alt="The passing PE pipeline test."
+  caption="Pipeline test passing"
+/>
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fe59-70a2-9395-111a0e38de15/06-pe1-registered-result.png"
+  alt="PE1 registered result."
+  caption="PE1 result"
+/>
+
+## The first proper workload: matrix multiplication
+
+After the PE links were working, I configured the four processing elements to calculate a 2×2 matrix multiplication.
+
+For example:
+
+```text id="q4lq0j"
+A = [1  2]       B = [5  6]
+    [3  4]           [7  8]
+```
+
+The expected result is:
+
+```text id="h8cg2n"
+A × B = [19  22]
+        [43  50]
+```
+
+The four processing elements were configured to perform the multiply-and-accumulate work.
+
+The results matched:
+
+```text id="e7lvb2"
+C00 = 19
+C01 = 22
+C10 = 43
+C11 = 50
+```
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-fef7-77b7-ac62-76a6e9b08eff/07-four-pe-test-results.png"
+  alt="Results from all four PEs."
+  caption="Four PE results"
+/>
+
+**2×2 matrix multiplication passed.**
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe10-ff8a-7d51-bbd8-620137654ba2/08-matrix-multiplication-test.png"
+  alt="Matrix multiplication test."
+  caption="Matrix multiplication"
+/>
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-0027-70b8-b68b-7bfa16b1f0aa/09-matrix-multiplication-waveform.png"
+  alt="Matrix multiplication waveform."
+  caption="Simulation waveform"
+/>
+
+## Getting it onto Tiny Tapeout
+
+Simulation passing didn't mean it would fit.
+
+Tiny Tapeout has a limited pin budget, so FluxCore needed a compact host interface. The wrapper uses serial configuration and serial operand/result transfers.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-00b4-7d93-90bf-17f1ee0f286a/10-serial-configuration-shift.png"
+  alt="Serial configuration shift."
+  caption="Serial configuration"
+/>
+
+| Input      | Purpose                         |
+| ---------- | ------------------------------- |
+| `ui[0]`    | Configuration data              |
+| `ui[1]`    | Configuration clock             |
+| `ui[2]`    | Configuration shift enable      |
+| `ui[3]`    | Execute                         |
+| `ui[4]`    | Operand data                    |
+| `ui[5]`    | Operand valid                   |
+| `ui[6]`    | Read result                     |
+| `ui[7]`    | Select PE result or accumulator |
+| `uio[1:0]` | Select one of the four PEs      |
+
+The four configuration bytes are shifted in as one 32-bit stream.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-0135-7540-80e6-cfd8732903bd/11-config-register-waveform.png"
+  alt="Configuration register waveform."
+  caption="Configuration registers"
+/>
+
+The wrapper accepts eight 32-bit operand words, and a selected result or accumulator can be read back serially.
+
+I generated the Verilog from Amaranth and moved the project into the Tiny Tapeout flow targeting **GF180MCU**.
+
+## The floorplan problems
+
+The first GDS run used a **4×2 tile allocation**. It got as far as detailed placement, but the reported utilization was 98.708%. The placer then failed to place 2,202 instances.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-01d7-7438-87a5-d27bc86eb162/12-placement-utilization-failure.png"
+  alt="Placement failure."
+  caption="Placement failure"
+/>
+
+That run took about nine minutes before it stopped. I changed the Tiny Tapeout allocation to **3×4 tiles** for the next attempt.
+
+Just to be clear, the 3×4 is the tile space, not the PE count. It's still a 2×2 array.
+
+The next run got a lot further. The placement log showed 57.607% utilization, and detailed placement completed. There was still some overflow during global placement:
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-028b-751b-acc1-a6599ff353dd/13-global-placement-overflow.png"
+  alt="Global placement overflow."
+  caption="Global placement"
+/>
+
+That run took almost 49 minutes before it stopped later in the flow. The timing check found 581 endpoints with setup violations.
+
+The initial `CLOCK_PERIOD` was 20 ns, which gives the tools a 50 MHz target.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-030c-723e-af89-20ea435ed585/14-setup-timing-failure.png"
+  alt="Setup timing failure."
+  caption="Setup timing"
+/>
+
+I changed it to:
+
+```json id="br32qs"
+"CLOCK_PERIOD": 200
+```
+
+That's 200 ns, or a 5 MHz target. It's just what I told the tools to aim for, not a tested speed of the chip.
+
+After that change, the physical-design run completed.
+
+## The viewer failed too
+
+The first attempt at the viewer job failed while GitHub Pages was looking up the deployment artifact.
+
+The GDS and other build artifacts were already there. It was the Pages deployment step that failed.
+
+I checked the uploaded artifacts, confirmed that the viewer package was there, and reran the failed job.
+
+This time it worked.
+
+## The final result
+
+The final successful workflow is here:
+
+[FluxCore — Tiny Tapeout build](https://github.com/Nitin-2468-dev/Flux-Core/actions/runs/44837107502)
+
+It used commit:
+
+```text id="f8j3lr"
+0e39fec330cd610337dced8f5718cd9f779ca29b
+```
+
+All four jobs passed, including the four gate-level tests.
+
+Those tests covered reset and idle, configuration finishing on the 32nd shift, the PE0-to-PE1 addition pipeline with serial readback, and MAC accumulator readback.
+
+It finally passed and gave me the GDS.
+
+<Figure
+  src="https://cdn.hackclub.com/01a1fe11-041d-7a17-a6ff-f3b61dda126a/16-final-gds-render.png"
+  alt="Final FluxCore GDS."
+  caption="FluxCore GDS"
+/>
+
+You can inspect the layout here:
+
+- [3D GDS Viewer](https://gds-viewer.tinytapeout.com/?model=https:%2F%2Fnitin-2468-dev.github.io%2FFlux-Core%2Ftinytapeout.oas&pdk=gf180mcuD)
+- [Tiny Tapeout Explorer](https://gds-explorer.tinytapeout.com/viewer?file=https:%2F%2Fnitin-2468-dev.github.io%2FFlux-Core%2Ftinytapeout.oas&pdk=gf180mcuD)
+
+This is the generated GDS. I haven't tested a chip on a physical board yet. The four gate-level tests cover the main wrapper behaviours, but there is still more testing to do.
+
+I would still like to test all the operations and source combinations, add more edge cases, allow operands to be reloaded without resetting the design, and improve the execution handshake.
+
+---
+
+## Links
+
+- [FluxCore repository](https://github.com/Nitin-2468-dev/Flux-Core)
+- [First placement attempt](https://github.com/Nitin-2468-dev/Flux-Core/actions/runs/44826962250)
+- [Second physical-design attempt](https://github.com/Nitin-2468-dev/Flux-Core/actions/runs/44829249450)
+- [Final GitHub Actions build](https://github.com/Nitin-2468-dev/Flux-Core/actions/runs/44837107502)
+- [3D GDS Viewer](https://gds-viewer.tinytapeout.com/?model=https:%2F%2Fnitin-2468-dev.github.io%2FFlux-Core%2Ftinytapeout.oas&pdk=gf180mcuD)
+- [Tiny Tapeout Explorer](https://gds-explorer.tinytapeout.com/viewer?file=https:%2F%2Fnitin-2468-dev.github.io%2FFlux-Core%2Ftinytapeout.oas&pdk=gf180mcuD)
