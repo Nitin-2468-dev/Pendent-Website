@@ -305,33 +305,9 @@ That's 200 ns, or a 5 MHz target. It's just what I told the tools to aim for, no
 
 After that change, the physical-design run completed.
 
-## The viewer failed too
-
-The first attempt at the viewer job failed while GitHub Pages was looking up the deployment artifact.
-
-The GDS and other build artifacts were already there. It was the Pages deployment step that failed.
-
-I checked the uploaded artifacts, confirmed that the viewer package was there, and reran the failed job.
-
-This time it worked.
-
-## The final result
-
-The final successful workflow is here:
+---
 
 [FluxCore — Tiny Tapeout build](https://github.com/Nitin-2468-dev/Flux-Core/actions/runs/44837107502)
-
-It used commit:
-
-```text id="f8j3lr"
-0e39fec330cd610337dced8f5718cd9f779ca29b
-```
-
-All four jobs passed, including the four gate-level tests.
-
-Those tests covered reset and idle, configuration finishing on the 32nd shift, the PE0-to-PE1 addition pipeline with serial readback, and MAC accumulator readback.
-
-It finally passed and gave me the GDS.
 
 <Figure
   src="https://cdn.hackclub.com/01a1fe11-041d-7a17-a6ff-f3b61dda126a/16-final-gds-render.png"
@@ -343,10 +319,6 @@ You can inspect the layout here:
 
 - [3D GDS Viewer](https://gds-viewer.tinytapeout.com/?model=https:%2F%2Fnitin-2468-dev.github.io%2FFlux-Core%2Ftinytapeout.oas&pdk=gf180mcuD)
 - [Tiny Tapeout Explorer](https://gds-explorer.tinytapeout.com/viewer?file=https:%2F%2Fnitin-2468-dev.github.io%2FFlux-Core%2Ftinytapeout.oas&pdk=gf180mcuD)
-
-This is the generated GDS. I haven't tested a chip on a physical board yet. The four gate-level tests cover the main wrapper behaviours, but there is still more testing to do.
-
-I would still like to test all the operations and source combinations, add more edge cases, allow operands to be reloaded without resetting the design, and improve the execution handshake.
 
 ---
 
